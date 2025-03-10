@@ -41,7 +41,7 @@ const Navbar = () => {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input 
-                className="w-[80%] bg-white/80 border-0 text-white pl-10 focus:bg-white/30" 
+                className="w-[70%] bg-white/80 border-0 text-white pl-10 focus:bg-white/30" 
                 placeholder="Search"
               />
             </div>
