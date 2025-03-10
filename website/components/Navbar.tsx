@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   NavigationMenu,
+  NavigationMenuContent,
   NavigationMenuItem,
   NavigationMenuList,
   NavigationMenuTrigger,
@@ -21,6 +22,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { NavigationMenuLink } from "@radix-ui/react-navigation-menu";
 
 const Navbar = () => {
   // State to control search focus
@@ -32,9 +34,9 @@ const Navbar = () => {
         {/* Grid System Layout */}
         <div className="grid grid-cols-12 gap-4 items-center">
           {/* Logo - 2 cols */}
-          <div className="col-span-6 xl:col-span-2">
+          <Link className="col-span-6 xl:col-span-2" href='/'>
             <Image src="/sunsafe.svg" alt="logo" width={150} height={36} />
-          </div>
+          </Link>
           
           {/* Search - 3 cols (hidden on mobile) */}
           <div className="hidden xl:block xl:col-span-3">
@@ -54,14 +56,30 @@ const Navbar = () => {
                 <NavigationMenuList>
                   {navItems.map((item) => (
                     <NavigationMenuItem key={item.label}>
-                      <NavigationMenuTrigger className="text-sm bg-yellow-300 text-sky-600 ">
+                      <NavigationMenuTrigger className="text-sm bg-yellow-300/80 text-sky-600">
                         {item.label}
                       </NavigationMenuTrigger>
+                      {item.tabs && (
+                        <NavigationMenuContent className="min-w-[200px] w-max max-w-[400px]">
+                          <ul className="grid w-full gap-2 p-4">
+                            {item.tabs.map((tab) => (
+                              <li key={tab.label}>
+                                <NavigationMenuLink 
+                                  href={tab.link} 
+                                  className="block w-full whitespace-nowrap px-4 py-2 hover:bg-slate-100 rounded-md"
+                                >
+                                  {tab.label}
+                                </NavigationMenuLink>
+                              </li>
+                            ))}
+                          </ul>
+                        </NavigationMenuContent>
+                      )}
                     </NavigationMenuItem>
                   ))}
                 </NavigationMenuList>
               </NavigationMenu>
-              <Button size="sm" className="ml-4 text-sm bg-yellow-300 text-sky-600 hover:bg-sky-300 hover:text-yellow-200">
+              <Button size="sm" className="ml-4 text-sm bg-yellow-300/80 text-sky-600 hover:bg-sky-300 hover:text-yellow-200">
                 Get Protected
               </Button>
             </div>

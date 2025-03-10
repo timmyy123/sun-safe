@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 body {
-  @apply bg-green-100;
+  @apply bg-cyan-200;
 }
 
 :root {
