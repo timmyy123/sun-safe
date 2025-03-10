@@ -7,7 +7,16 @@ type Location = {
   name: string;
 };
 
-export const useGeolocation = (mapboxToken: string, fallbackLocation: any) => {
+type FallbackLocation = {
+  latitude: number;
+  longitude: number;
+  name: string;
+};
+
+export const useGeolocation = (
+  mapboxToken: string,
+  fallbackLocation: FallbackLocation
+) => {
   const [location, setLocation] = useState<Location | null>(null);
   const [isLocating, setIsLocating] = useState(true);
 

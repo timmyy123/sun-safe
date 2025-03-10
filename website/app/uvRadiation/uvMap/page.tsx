@@ -56,12 +56,17 @@ function UVMapContent() {
   // Update location from geolocation
   useEffect(() => {
     if (location) {
+      // Set selected place with the user location
       setSelectedPlace(location);
+      
+      // Update the viewstate to center on the user's location
       setViewState({
         longitude: location.lng,
         latitude: location.lat,
         zoom: 10,
       });
+      
+      // Add the user's location to the heatmap
       addToHeatmap(location.lat, location.lng);
     }
   }, [location]);
