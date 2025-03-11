@@ -14,13 +14,13 @@ export async function POST(req: Request) {
     console.log("Received messages:", messages);
 
     // If you have a system prompt, uncomment:
-    // messages.unshift({
-    //   role: "system",
-    //   content: "You are SunSafe AI, an expert in sun safety and dermatology..."
-    // });
+    messages.unshift({
+      role: "system",
+      content: "You are SunSafe AI, an expert in sun safety and dermatology..."
+    });
 
     const result = streamText({
-      model: google("gemini-2.0-flash-001", {
+      model: google("gemini-2.0-flash", {
         // If needed, add settings here, e.g. safetySettings
         // safetySettings: [
         //   { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
@@ -29,9 +29,11 @@ export async function POST(req: Request) {
       messages,
     });
 
+
     console.log("streamText call succeeded, returning stream...");
 
     // Return streaming response
+    console.log(result.toDataStreamResponse())
     return result.toDataStreamResponse();
   } catch (error) {
     console.error("Error in /api/chat route:", error);

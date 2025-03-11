@@ -207,7 +207,7 @@ export function ChatMessages({
 
   return (
     <div
-      className="grid grid-cols-1 overflow-y-auto pb-4"
+      className="grid grid-cols-1 overflow-y-auto overflow-x-hidden pb-4"
       ref={containerRef}
       onScroll={handleScroll}
       onTouchStart={handleTouchStart}

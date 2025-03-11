@@ -216,7 +216,7 @@ export function MessageInput({
           />
 
           {props.allowAttachments && (
-            <div className="absolute inset-x-3 bottom-0 z-20 overflow-x-scroll py-3">
+            <div className="absolute inset-x-3 bottom-0 z-20 overflow-x-hidden py-3">
               <div className="flex space-x-3">
                 <AnimatePresence mode="popLayout">
                   {props.files?.map((file) => {
@@ -406,7 +406,7 @@ function RecordingPrompt({ isVisible, onStopRecording }: RecordingPromptProps) {
             },
           }}
           exit={{ top: 0, filter: "blur(5px)" }}
-          className="absolute left-1/2 flex -translate-x-1/2 cursor-pointer overflow-hidden whitespace-nowrap rounded-full border bg-background py-1 text-center text-sm text-muted-foreground"
+          className="absolute left-1/2 flex -translate-x-1/2 cursor-pointer  whitespace-nowrap rounded-full border bg-background py-1 text-center text-sm text-muted-foreground"
           onClick={onStopRecording}
         >
           <span className="mx-2.5 flex items-center">

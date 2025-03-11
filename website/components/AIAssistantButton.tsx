@@ -59,7 +59,7 @@ export default function AIAssistantButton() {
 
           <div className="flex-1 overflow-hidden p-4">
             <Chat
-            className="h-full"
+              className="h-full"
               messages={messages}
               input={input}
               handleInputChange={handleInputChange}
@@ -68,9 +68,9 @@ export default function AIAssistantButton() {
               stop={stop}
               append={append}
               suggestions={[
-                "Generate a tasty vegan lasagna recipe for 3 people.",
-                "Generate a list of 5 questions for a frontend job interview.",
-                "Who won the 2022 FIFA World Cup?",
+                "What's the best SPF rating for daily use?",
+                "How often should I reapply sunscreen?",
+                "Tips to protect my kids from UV rays?",
               ]}
             />
           </div>
