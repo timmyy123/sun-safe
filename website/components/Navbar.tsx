@@ -26,6 +26,11 @@ import {
 
 const Navbar = () => {
   const [showSearchInput, setShowSearchInput] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const handleLinkClick = () => {
+    setIsSidebarOpen(false);
+  };
 
   return (
     <section className="bg-sky-300/80 border-b-1 py-3 px-4">
@@ -89,7 +94,7 @@ const Navbar = () => {
 
           {/* Mobile Hamburger - Right aligned (only visible on mobile) */}
           <div className="col-span-6 xl:hidden flex justify-end">
-            <Sheet>
+            <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
               <SheetTrigger asChild>
                 <Button variant="outline" size="icon">
                   <Menu className="h-5 w-5" />
@@ -125,6 +130,7 @@ const Navbar = () => {
                                     key={tab.label}
                                     href={tab.link}
                                     className="flex items-center h-10 px-4 rounded-md text-sm font-normal text-gray-700 hover:bg-slate-100"
+                                    onClick={handleLinkClick}
                                   >
                                     {tab.label}
                                   </Link>
@@ -135,6 +141,7 @@ const Navbar = () => {
                             <Link
                               href="#"
                               className="flex items-center h-10 px-4 rounded-xl text-sm font-medium hover:bg-slate-100"
+                              onClick={handleLinkClick}
                             >
                               {item.label}
                             </Link>
