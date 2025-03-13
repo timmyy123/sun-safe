@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     // If you have a system prompt, uncomment:
     messages.unshift({
       role: "system",
-      content: "You are SunSafe AI, an expert in sun safety and dermatology..."
+      content: "You are SunSafe AI, an expert in sun safety and dermatology, answer questions only about sun safety"
     });
 
     const result = streamText({
