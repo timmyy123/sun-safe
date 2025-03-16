@@ -6,10 +6,11 @@ import Link from "next/link";
 import {
   NavigationMenu,
   NavigationMenuContent,
+  NavigationMenuIndicator,
   NavigationMenuItem,
+  NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-  NavigationMenuLink,
 } from "@/components/ui/navigation-menu";
 import { Input } from "@/components/ui/input";
 import { navItems } from "@/assets";
@@ -56,16 +57,20 @@ const Navbar = () => {
           {/* Desktop Navigation - 7 cols (hidden on mobile) */}
           <div className="hidden xl:block xl:col-span-7">
             <div className="flex items-center justify-end">
-              <NavigationMenu>
+              {/* Set viewport to false to allow direct positioning under each trigger */}
+              <NavigationMenu viewport={false} className="relative">
                 <NavigationMenuList>
                   {navItems.map((item) => (
-                    <NavigationMenuItem key={item.label}>
+                    <NavigationMenuItem key={item.label} className="relative">
                       <NavigationMenuTrigger className="text-sm bg-amber-400/80 text-white">
                         {item.label}
                       </NavigationMenuTrigger>
+
                       {item.tabs && (
-                        <NavigationMenuContent className="min-w-[200px] w-max max-w-[400px]">
-                          <ul className="grid w-full gap-2 p-4">
+                        <NavigationMenuContent
+                          className="absolute left-0 top-full bg-white rounded-md border shadow-md p-2 min-w-[150px] mt-1"
+                        >
+                          <ul className="grid gap-2">
                             {item.tabs.map((tab) => (
                               <li key={tab.label}>
                                 <NavigationMenuLink
@@ -83,6 +88,7 @@ const Navbar = () => {
                   ))}
                 </NavigationMenuList>
               </NavigationMenu>
+
               <Button
                 size="sm"
                 className="ml-4 text-sm bg-amber-400/80 text-white hover:bg-sky-300 hover:text-yellow-200"
