@@ -68,7 +68,7 @@ const Navbar = () => {
 
                       {item.tabs && (
                         <NavigationMenuContent
-                          className="absolute left-0 top-full bg-white rounded-md border shadow-md p-2 min-w-[150px] mt-1"
+                          className="absolute left-0 top-full bg-white rounded-md border shadow-md p-2 min-w-[150px] mt-1 z-100"
                         >
                           <ul className="grid gap-2">
                             {item.tabs.map((tab) => (
