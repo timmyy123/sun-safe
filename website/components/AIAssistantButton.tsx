@@ -30,7 +30,7 @@ export default function AIAssistantButton() {
   return (
     <>
       {/* Floating button in bottom-right corner */}
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-20 right-3 md:right-6 z-50">
         <Button
           onClick={toggleChat}
           className={cn(
@@ -44,7 +44,7 @@ export default function AIAssistantButton() {
 
       {/* Chat container */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 z-40 w-80 md:w-96 h-[500px] rounded-lg shadow-xl bg-white border border-gray-200 overflow-hidden flex flex-col">
+        <div className="fixed bottom-24 right-6 z-40 w-80 md:w-96 h-[500px] rounded-lg shadow-xl bg-white border border-0 overflow-hidden flex flex-col">
           <div className="bg-gradient-to-r from-yellow-400 to-orange-500 p-3 flex justify-between items-center">
             <h3 className="text-white font-medium">SunSafe Assistant</h3>
             <Button

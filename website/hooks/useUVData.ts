@@ -1,4 +1,4 @@
-import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
 const OPENUV_API_KEY = process.env.NEXT_PUBLIC_OPENUV_API_KEY || "";
@@ -38,13 +38,11 @@ const fetchUVData = async (lat: number, lng: number) => {
 };
 
 export const useUVData = (selectedPlace: any) => {
-  return useQuery(
-    ["uvData", selectedPlace?.lat, selectedPlace?.lng],
-    () => fetchUVData(selectedPlace.lat, selectedPlace.lng),
-    { 
-      enabled: !!selectedPlace,
-      refetchOnWindowFocus: false,
-      staleTime: 1000 * 60 * 5, // 5 minutes
-    }
-  );
+  return useQuery({
+    queryKey: ["uvData", selectedPlace?.lat, selectedPlace?.lng],
+    queryFn: () => fetchUVData(selectedPlace.lat, selectedPlace.lng),
+    enabled: !!selectedPlace,
+    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
 };
