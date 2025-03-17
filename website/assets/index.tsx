@@ -1,10 +1,32 @@
 import hero from "./hero.jpg";
 
 const navItems = [
-  { label: "UV Radiation", tabs: [{label: 'UV on Map', link:'/uvRadiation/uvMap'}] },
-  { label: "Impacts of UV exposure", tabs:[{label: 'Skin Cancer', link:'/uvImpacts/cancer'},{label:'UV map per state', link:'/uvImpacts/uvByState'}] },
-  { label: "UV Protection", tabs: [{label: 'Sunscreen Reminder', link:'/uvProtection/sunscreenReminder'}] },
-  { label: "Sun Protection products" },
+// <<<<<<< HEAD
+//   { label: "UV Radiation", tabs: [{label: 'UV on Map', link:'/uvRadiation/uvMap'}] },
+//   { label: "Impacts of UV exposure", tabs:[{label: 'Skin Cancer', link:'/uvImpacts/cancer'},{label:'UV map per state', link:'/uvImpacts/uvByState'}] },
+//   { label: "UV Protection", tabs: [{label: 'Sunscreen Reminder', link:'/uvProtection/sunscreenReminder'}] },
+//   { label: "Sun Protection products" },
+// =======
+    {
+        label: "UV Radiation",
+        tabs: [{ label: "UV on Map", link: "/uvRadiation/uvMap" }],
+    },
+    { label: "Impacts of UV exposure", tabs:[{label: 'Skin Cancer', link:'/uvImpacts/cancer'},{label:'UV map per state', link:'/uvImpacts/uvByState'}] },
+    {
+        label: "UV Protection",
+        tabs: [
+            {
+                label: "Sunscreen Reminder",
+                link: "/uvProtection/sunscreenReminder",
+            },
+            {
+                label: "Sunscreen Calculator",
+                link: "/uvProtection/sunscreenCalculator",
+            },
+        ],
+    },
+    { label: "Sun Protection products" },
+>>>>>>> 9dc755f35b6557ce0eba255042f8c5f396da3889
 ];
 
 const australiaStates = {
