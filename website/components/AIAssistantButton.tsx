@@ -44,7 +44,7 @@ export default function AIAssistantButton() {
 
       {/* Chat container */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 z-40 w-80 md:w-96 h-[500px] rounded-lg shadow-xl bg-white border border-0 overflow-hidden flex flex-col">
+        <div className="fixed bottom-24 right-6 z-40 w-80 md:w-96 h-[500px] rounded-lg shadow-xl bg-white border-0 overflow-hidden flex flex-col">
           <div className="bg-gradient-to-r from-yellow-400 to-orange-500 p-3 flex justify-between items-center">
             <h3 className="text-white font-medium">SunSafe Assistant</h3>
             <Button
@@ -68,9 +68,9 @@ export default function AIAssistantButton() {
               stop={stop}
               append={append}
               suggestions={[
-                "What's the best SPF rating for daily use?",
-                "How often should I reapply sunscreen?",
-                "Tips to protect my kids from UV rays?",
+                "Can you recommend sun-safe clothing based on my skin type?",
+                "What sun protection would you suggest for my outdoor activities?",
+                "How can I create a personalized sun safety plan?",
               ]}
             />
           </div>
