@@ -23,35 +23,35 @@ const UVMap = ({
   mapRef,
 }: UVMapProps) => {
   // Heatmap layer style
-  const heatmapLayer = {
-    id: "uv-heat",
-    type: "heatmap",
-    paint: {
-      "heatmap-weight": ["get", "uv"],
-      "heatmap-intensity": 0.8,
-      "heatmap-color": [
-        "interpolate",
-        ["linear"],
-        ["heatmap-density"],
-        0,
-        "rgba(0, 0, 255, 0)",
-        0.1,
-        "royalblue",
-        0.3,
-        "cyan",
-        0.5,
-        "lime",
-        0.7,
-        "yellow",
-        0.9,
-        "orange",
-        1,
-        "red",
-      ],
-      "heatmap-radius": 30,
-      "heatmap-opacity": 0.8,
-    },
-  };
+  // const heatmapLayer = {
+  //   id: "uv-heat",
+  //   type: "heatmap",
+  //   paint: {
+  //     "heatmap-weight": ["get", "uv"],
+  //     "heatmap-intensity": 0.8,
+  //     "heatmap-color": [
+  //       "interpolate",
+  //       ["linear"],
+  //       ["heatmap-density"],
+  //       0,
+  //       "rgba(0, 0, 255, 0)",
+  //       0.1,
+  //       "royalblue",
+  //       0.3,
+  //       "cyan",
+  //       0.5,
+  //       "lime",
+  //       0.7,
+  //       "yellow",
+  //       0.9,
+  //       "orange",
+  //       1,
+  //       "red",
+  //     ],
+  //     "heatmap-radius": 30,
+  //     "heatmap-opacity": 0.8,
+  //   },
+  // };
 
   return (
     <div className="lg:col-span-2 rounded-xl overflow-hidden shadow-lg border border-slate-200 h-full min-h-[600px] bg-[#e5e7eb]">
@@ -59,19 +59,24 @@ const UVMap = ({
         ref={mapRef}
         mapboxAccessToken={mapboxToken}
         {...viewState}
+        onLoad={() => {
+          setViewState({
+            ...viewState,
+            zoom: 16,
+          });
+        }}
         onMove={(evt) => setViewState(evt.viewState)}
         mapStyle="mapbox://styles/mapbox/light-v11"
         onClick={handleMapClick}
         attributionControl={false}
-        zoom={12}
         style={{ width: "100%", height: "100%" }}
       >
         {/* UV Heatmap Layer */}
-        {heatmapData.features.length > 0 && (
+        {/* {heatmapData.features.length > 0 && (
           <Source type="geojson" data={heatmapData}>
             <Layer {...heatmapLayer} />
           </Source>
-        )}
+        )} */}
 
         {/* Marker for selected location */}
         {selectedPlace && (

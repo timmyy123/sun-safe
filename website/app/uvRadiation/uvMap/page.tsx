@@ -67,7 +67,7 @@ function UVMapContent() {
       });
       
       // Add the user's location to the heatmap
-      addToHeatmap(location.lat, location.lng);
+      // addToHeatmap(location.lat, location.lng);
     }
   }, [location]);
 
@@ -75,23 +75,23 @@ function UVMapContent() {
   const { data: uvData, isLoading: isLoadingUV, error: uvError } = useUVData(selectedPlace);
 
   // Add a point to the heatmap
-  const addToHeatmap = (lat, lng, uvValue = 5) => {
-    const newFeature = {
-      type: "Feature",
-      properties: {
-        uv: uvValue,
-      },
-      geometry: {
-        type: "Point",
-        coordinates: [lng, lat],
-      },
-    };
+  // const addToHeatmap = (lat, lng, uvValue = 5) => {
+  //   const newFeature = {
+  //     type: "Feature",
+  //     properties: {
+  //       uv: uvValue,
+  //     },
+  //     geometry: {
+  //       type: "Point",
+  //       coordinates: [lng, lat],
+  //     },
+  //   };
 
-    setHeatmapData((prev) => ({
-      ...prev,
-      features: [...prev.features, newFeature],
-    }));
-  };
+  //   setHeatmapData((prev) => ({
+  //     ...prev,
+  //     features: [...prev.features, newFeature],
+  //   }));
+  // };
 
   // Update heatmap when UV data is received
   useEffect(() => {
@@ -118,7 +118,7 @@ function UVMapContent() {
       name: `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
     });
 
-    addToHeatmap(lat, lng);
+    // addToHeatmap(lat, lng);
   };
 
   // Handle geocoding search
@@ -165,7 +165,7 @@ function UVMapContent() {
         });
 
         // Add to heatmap
-        addToHeatmap(lat, lng);
+        // addToHeatmap(lat, lng);
       } else {
         setSearchError("No results found");
       }
