@@ -62,13 +62,14 @@ const Navbar = () => {
                 <NavigationMenuList>
                   {navItems.map((item) => (
                     <NavigationMenuItem key={item.label} className="relative">
-                      <NavigationMenuTrigger className="text-sm bg-amber-400/80 text-white">
+                      <NavigationMenuTrigger className="text-sm bg-amber-400/80 text-white" style={{ cursor: 'pointer' }}>
                         {item.label}
                       </NavigationMenuTrigger>
 
                       {item.tabs && (
                         <NavigationMenuContent
                           className="absolute left-0 top-full bg-white rounded-md border shadow-md p-2 min-w-[150px] mt-1 z-100"
+                          style={{ cursor: 'pointer' }}
                         >
                           <ul className="grid gap-2">
                             {item.tabs.map((tab) => (
