@@ -26,7 +26,7 @@ const navItems = [
         ],
     },
     { label: "Sun Protection products" },
->>>>>>> 9dc755f35b6557ce0eba255042f8c5f396da3889
+// >>>>>>> 9dc755f35b6557ce0eba255042f8c5f396da3889
 ];
 
 const australiaStates = {
