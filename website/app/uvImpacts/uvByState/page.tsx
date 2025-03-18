@@ -1,500 +1,338 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import * as d3 from 'd3';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import React, { useState, useEffect, useRef } from "react";
+import * as d3 from "d3";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
-// UV data fetching
-const fetchUVData = async (state = 'all') => {
-  const response = await fetch(`/api/uv-data?state=${state}`);
-  if (!response.ok) throw new Error('Failed to fetch UV data');
-  const result = await response.json();
-  return result.data;
-};
+interface UVDoc {
+  state: string;
+  year?: number;
+  month?: string;
+  avgUV: number;
+  maxUV: number;
+}
 
-export default function UVByState() {
-  const [uvData, setUvData] = useState([]);
+export default function UVByStatePage() {
+  const [groupBy, setGroupBy] = useState<"year"|"month">("year");
   const [selectedState, setSelectedState] = useState("all");
-  const chartRef = useRef(null);
-  const yearlyChartRef = useRef(null);
-  const [loading, setLoading] = useState(true);
-  
-  // Fetch and process UV data
+  const [uvData, setUvData] = useState<UVDoc[]>([]);
+  const [loading, setLoading] = useState(false);
+  const chartRef = useRef<HTMLDivElement>(null);
+
+  // Website theme colors
+  const themeColors = {
+    primary: "#F97316",     // Orange-500
+    secondary: "#38BDF8",   // Sky-400
+    accent: "#F59E0B",      // Amber-500
+    background: "#FFFFFF",  // White
+    text: "#334155",        // Slate-700
+    border: "#E2E8F0"       // Slate-200
+  };
+
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
-        const rawData = await fetchUVData(selectedState);
-
-        // Group by state & year & month, calculate avg and max
-        const processed = {};
-        rawData.forEach(item => {
-          const { state, date, month, avgUV, maxUV } = item;
-          // Extract the year from the date string
-          const year = date ? parseInt(date.split('-')[0]) : new Date().getFullYear();
-          const key = `${state}-${year}-${month}`;
-
-          if (!processed[key]) {
-            processed[key] = { 
-              state, 
-              year, 
-              month,
-              totals: 0, 
-              count: 0, 
-              maxUV: 0 
-            };
-          }
-          processed[key].totals += avgUV;
-          processed[key].count++;
-          processed[key].maxUV = Math.max(processed[key].maxUV, maxUV);
-        });
-
-        // Turn into { state, year, month, avgUV, maxUV }
-        const finalData = Object.values(processed).map(d => ({
-          state: d.state,
-          year: d.year,
-          month: d.month,
-          avgUV: d.totals / d.count,
-          maxUV: d.maxUV
-        }));
-        
-        setUvData(finalData);
-      } catch (error) {
-        console.error("Error fetching UV data:", error);
+        const params = new URLSearchParams();
+        params.append("groupBy", groupBy);
+        if (selectedState !== "all") {
+          params.append("state", selectedState);
+        }
+        const res = await fetch(`/api/uv-data?${params.toString()}`);
+        if (!res.ok) throw new Error("Failed to fetch UV data");
+        const json = await res.json();
+        setUvData(json.data || []);
+      } catch (err) {
+        console.error(err);
       } finally {
         setLoading(false);
       }
     };
-    
     fetchData();
-  }, [selectedState]);
+  }, [groupBy, selectedState]);
 
-  // Render line chart by state
   useEffect(() => {
-    if (!chartRef.current || !uvData.length || loading) return;
-    
-    d3.select(chartRef.current).selectAll('*').remove();
+    if (!chartRef.current || !uvData.length) return;
 
-    // Setup dimensions
-    const margin = { top: 30, right: 80, bottom: 50, left: 60 };
-    const width = 700 - margin.left - margin.right;
-    const height = 400 - margin.top - margin.bottom;
+    d3.select(chartRef.current).selectAll("*").remove();
 
-    // Create svg
+    const containerWidth = chartRef.current.clientWidth || 600;
+    const containerHeight = 400;
+    const margin = { top: 30, right: 30, bottom: 50, left: 60 };
+    const width = containerWidth - margin.left - margin.right;
+    const height = containerHeight - margin.top - margin.bottom;
+
     const svg = d3.select(chartRef.current)
-      .append('svg')
-      .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.top + margin.bottom)
-      .append('g')
-      .attr('transform', `translate(${margin.left},${margin.top})`);
+      .append("svg")
+      .attr("width", containerWidth)
+      .attr("height", containerHeight)
+      .append("g")
+      .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    // Filter data based on selected state
-    let filteredData = uvData;
-    if (selectedState !== "all") {
-      filteredData = uvData.filter(d => d.state === selectedState);
+    // X values
+    let x: d3.ScaleBand<string> | d3.ScaleLinear<number, number>;
+    let sortedData = uvData.slice();
+    if (groupBy === "month") {
+      // Predefined month order
+      const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      x = d3.scalePoint()
+        .domain(months)
+        .range([0, width])
+        .padding(0.5);
+      // Sort by that order if needed
+      sortedData.sort((a, b) => months.indexOf(a.month || "") - months.indexOf(b.month || ""));
+    } else {
+      // groupBy=year -> numeric x
+      const allYears = Array.from(new Set(sortedData.map(d => d.year))).sort((a, b) => (a || 0) - (b || 0));
+      x = d3.scaleLinear()
+        .domain([d3.min(allYears) || 0, d3.max(allYears) || 1])
+        .range([0, width]);
+      // Sort by year
+      sortedData.sort((a, b) => (a.year || 0) - (b.year || 0));
     }
 
-    // Group data by state
-    const states = Array.from(new Set(filteredData.map(d => d.state)));
+    // Y scale: consider both avgUV and maxUV
+    const maxVal = d3.max(sortedData, d => Math.max(d.avgUV, d.maxUV)) || 10;
+    const y = d3.scaleLinear()
+      .domain([0, maxVal * 1.1])
+      .range([height, 0]);
+
+    // Style axes with theme colors
+    svg.append("g")
+      .attr("transform", `translate(0,${height})`)
+      .call(
+        groupBy === "month" 
+          ? d3.axisBottom(x as d3.ScalePoint<string>)
+          : d3.axisBottom(x as d3.ScaleLinear<number, number>).tickFormat(d3.format("d"))
+      )
+      .call(g => g.selectAll("line").attr("stroke", themeColors.text))
+      .call(g => g.selectAll("path").attr("stroke", themeColors.text))
+      .call(g => g.selectAll("text").attr("fill", themeColors.text));
     
-    // Parse month names for ordering
-    const monthOrder = {
-      'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6,
-      'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12
+    svg.append("g")
+      .call(d3.axisLeft(y))
+      .call(g => g.selectAll("line").attr("stroke", themeColors.text))
+      .call(g => g.selectAll("path").attr("stroke", themeColors.text))
+      .call(g => g.selectAll("text").attr("fill", themeColors.text));
+
+    // Add axis labels
+    svg.append("text")
+      .attr("transform", `translate(${width/2}, ${height + 40})`)
+      .style("text-anchor", "middle")
+      .style("fill", themeColors.text)
+      .style("font-size", "14px")
+      .text(groupBy === "month" ? "Month" : "Year");
+
+    svg.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", -45)
+      .attr("x", -height / 2)
+      .attr("text-anchor", "middle")
+      .style("fill", themeColors.text)
+      .style("font-size", "14px")
+      .text("UV Index");
+
+    // Create line generators
+    const lineAvg = d3.line<UVDoc>()
+      .defined(d => d.avgUV !== undefined)
+      .x(d => {
+        if (groupBy === "month") {
+          return (x as d3.ScalePoint<string>)(d.month || "") || 0;
+        }
+        return (x as d3.ScaleLinear<number, number>)(d.year || 0);
+      })
+      .y(d => y(d.avgUV))
+      .curve(d3.curveMonotoneX);
+
+    const lineMax = d3.line<UVDoc>()
+      .defined(d => d.maxUV !== undefined)
+      .x(d => {
+        if (groupBy === "month") {
+          return (x as d3.ScalePoint<string>)(d.month || "") || 0;
+        }
+        return (x as d3.ScaleLinear<number, number>)(d.year || 0);
+      })
+      .y(d => y(d.maxUV))
+      .curve(d3.curveMonotoneX);
+
+    // Draw the avgUV line
+    svg.append("path")
+      .datum(sortedData)
+      .attr("fill", "none")
+      .attr("stroke", themeColors.secondary)
+      .attr("stroke-width", 2.5)
+      .attr("d", lineAvg);
+
+    // Draw the maxUV line
+    svg.append("path")
+      .datum(sortedData)
+      .attr("fill", "none")
+      .attr("stroke", themeColors.primary)
+      .attr("stroke-width", 2.5)
+      .attr("d", lineMax);
+    
+    // Add jitter to the data points to avoid overlap
+    const jitter = (scale: d3.ScalePoint<string> | d3.ScaleLinear<number, number>, value: string | number) => {
+      const jitterAmount = 0.1; // Adjust this value to control the amount of jitter
+      if (typeof value === "string") {
+        return (scale as d3.ScalePoint<string>)(value) + (Math.random() - 0.5) * jitterAmount;
+      }
+      return (scale as d3.ScaleLinear<number, number>)(value) + (Math.random() - 0.5) * jitterAmount;
     };
-    
-    // Get all months in order
-    const months = Object.keys(monthOrder).sort((a, b) => monthOrder[a] - monthOrder[b]);
 
-    // X scale (months)
-    const x = d3.scaleBand()
-      .domain(months)
-      .range([0, width])
-      .padding(0.1);
-
-    // Y scale
-    const y = d3.scaleLinear()
-      .domain([0, d3.max(filteredData, d => Math.max(d.avgUV, d.maxUV)) * 1.1])
-      .range([height, 0]);
-
-    // Add axes
-    svg.append('g')
-      .attr('transform', `translate(0,${height})`)
-      .call(d3.axisBottom(x))
-      .selectAll("text")
-      .style("text-anchor", "end")
-      .attr("dx", "-.8em")
-      .attr("dy", ".15em")
-      .attr("transform", "rotate(-45)");
-      
-    svg.append('g')
-      .call(d3.axisLeft(y));
-
-    // Add title
-    svg.append("text")
-      .attr("x", width / 2)
-      .attr("y", -10)
-      .attr("text-anchor", "middle")
-      .style("font-size", "16px")
-      .style("font-weight", "bold")
-      .text(selectedState === "all" ? "UV Levels by Month Across All States" : `UV Levels in ${selectedState}`);
-
-    // Add X axis label
-    svg.append("text")
-      .attr("x", width / 2)
-      .attr("y", height + margin.bottom - 5)
-      .attr("text-anchor", "middle")
-      .text("Month");
-
-    // Add Y axis label
-    svg.append("text")
-      .attr("transform", "rotate(-90)")
-      .attr("y", -margin.left + 15)
-      .attr("x", -height / 2)
-      .attr("text-anchor", "middle")
-      .text("UV Index");
-
-    // Color scale for states
-    const color = d3.scaleOrdinal()
-      .domain(states)
-      .range(d3.schemeCategory10);
-
-    // Group data by state and month
-    const stateMonthData = {};
-    filteredData.forEach(d => {
-      if (!stateMonthData[d.state]) {
-        stateMonthData[d.state] = {};
-      }
-      stateMonthData[d.state][d.month] = d;
-    });
-
-    // Draw lines for each state
-    states.forEach(state => {
-      const monthlyData = months
-        .map(month => {
-          const entry = stateMonthData[state]?.[month];
-          return entry ? {
-            state,
-            month,
-            avgUV: entry.avgUV,
-            maxUV: entry.maxUV
-          } : null;
-        })
-        .filter(Boolean);
-
-      // Only draw if we have data
-      if (monthlyData.length > 0) {
-        // Draw avgUV line
-        svg.append('path')
-          .datum(monthlyData)
-          .attr('fill', 'none')
-          .attr('stroke', color(state))
-          .attr('stroke-width', 2)
-          .attr('stroke-dasharray', '5,0')
-          .attr('d', d3.line()
-            .x(d => x(d.month) + x.bandwidth() / 2)
-            .y(d => y(d.avgUV))
-          );
-
-        // Draw maxUV line
-        svg.append('path')
-          .datum(monthlyData)
-          .attr('fill', 'none')
-          .attr('stroke', color(state))
-          .attr('stroke-width', 2)
-          .attr('d', d3.line()
-            .x(d => x(d.month) + x.bandwidth() / 2)
-            .y(d => y(d.maxUV))
-          );
-          
-        // Add dots for max UV
-        svg.selectAll(`.maxdot-${state}`)
-          .data(monthlyData)
-          .join('circle')
-          .attr('class', `maxdot-${state}`)
-          .attr('cx', d => x(d.month) + x.bandwidth() / 2)
-          .attr('cy', d => y(d.maxUV))
-          .attr('r', 4)
-          .attr('fill', color(state));
-      }
-    });
-
-    // Add legend
-    const legend = svg.append('g')
-      .attr('transform', `translate(${width + 20}, 0)`);
-
-    states.forEach((state, i) => {
-      // Line for state
-      legend.append('line')
-        .attr('x1', 0)
-        .attr('y1', i * 25)
-        .attr('x2', 20)
-        .attr('y2', i * 25)
-        .attr('stroke', color(state))
-        .attr('stroke-width', 2);
-
-      // Label for state  
-      legend.append('text')
-        .attr('x', 25)
-        .attr('y', i * 25 + 4)
-        .text(state)
-        .style('font-size', '12px')
-        .attr('alignment-baseline', 'middle');
-    });
-
-    // Solid line for max
-    legend.append('line')
-      .attr('x1', 0)
-      .attr('y1', states.length * 25 + 10)
-      .attr('x2', 20)
-      .attr('y2', states.length * 25 + 10)
-      .attr('stroke', 'black')
-      .attr('stroke-width', 2);
-
-    legend.append('text')
-      .attr('x', 25)
-      .attr('y', states.length * 25 + 14)
-      .text('Maximum UV')
-      .style('font-size', '12px');
-
-    // Dotted line for avg
-    legend.append('line')
-      .attr('x1', 0)
-      .attr('y1', states.length * 25 + 30)
-      .attr('x2', 20)
-      .attr('y2', states.length * 25 + 30)
-      .attr('stroke', 'black')
-      .attr('stroke-width', 2)
-      .attr('stroke-dasharray', '5,0');
-
-    legend.append('text')
-      .attr('x', 25)
-      .attr('y', states.length * 25 + 34)
-      .text('Average UV')
-      .style('font-size', '12px');
-
-  }, [uvData, selectedState, loading]);
-
-  // Render yearly trends chart
-  useEffect(() => {
-    if (!yearlyChartRef.current || !uvData.length || loading) return;
-    d3.select(yearlyChartRef.current).selectAll('*').remove();
-
-    // Setup dimensions
-    const margin = { top: 30, right: 20, bottom: 50, left: 60 };
-    const width = 700 - margin.left - margin.right;
-    const height = 350 - margin.top - margin.bottom;
-
-    // Create svg
-    const svg = d3.select(yearlyChartRef.current)
-      .append('svg')
-      .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.top + margin.bottom)
-      .append('g')
-      .attr('transform', `translate(${margin.left},${margin.top})`);
-
-    // Group data by year
-    const yearData = {};
-    uvData.forEach(d => {
-      if (!yearData[d.year]) {
-        yearData[d.year] = { 
-          year: d.year, 
-          totalAvgUV: 0, 
-          totalMaxUV: 0, 
-          count: 0 
-        };
-      }
-      yearData[d.year].totalAvgUV += d.avgUV;
-      yearData[d.year].totalMaxUV += d.maxUV;
-      yearData[d.year].count++;
-    });
-
-    // Calculate yearly averages
-    const yearlyAverages = Object.values(yearData)
-      .map(d => ({
-        year: d.year,
-        avgUV: d.totalAvgUV / d.count,
-        maxUV: d.totalMaxUV / d.count
-      }))
-      .sort((a, b) => a.year - b.year);
-
-    // X scale
-    const x = d3.scaleLinear()
-      .domain(d3.extent(yearlyAverages, d => d.year))
-      .range([0, width]);
-
-    // Y scale
-    const y = d3.scaleLinear()
-      .domain([0, d3.max(yearlyAverages, d => Math.max(d.avgUV, d.maxUV)) * 1.1])
-      .range([height, 0]);
-
-    // Add axes
-    svg.append('g')
-      .attr('transform', `translate(0,${height})`)
-      .call(d3.axisBottom(x).tickFormat(d3.format("d")));
-      
-    svg.append('g')
-      .call(d3.axisLeft(y));
-
-    // Add title
-    svg.append("text")
-      .attr("x", width / 2)
-      .attr("y", -10)
-      .attr("text-anchor", "middle")
-      .style("font-size", "16px")
-      .style("font-weight", "bold")
-      .text("Yearly UV Trends in Australia");
-
-    // Add X axis label
-    svg.append("text")
-      .attr("x", width / 2)
-      .attr("y", height + margin.bottom - 10)
-      .attr("text-anchor", "middle")
-      .text("Year");
-
-    // Add Y axis label
-    svg.append("text")
-      .attr("transform", "rotate(-90)")
-      .attr("y", -margin.left + 15)
-      .attr("x", -height / 2)
-      .attr("text-anchor", "middle")
-      .text("UV Index");
-
-    // Draw avgUV line
-    svg.append('path')
-      .datum(yearlyAverages)
-      .attr('fill', 'none')
-      .attr('stroke', '#ffa500')
-      .attr('stroke-width', 2)
-      .attr('d', d3.line()
-        .x(d => x(d.year))
-        .y(d => y(d.avgUV))
-      );
-
-    // Draw maxUV line
-    svg.append('path')
-      .datum(yearlyAverages)
-      .attr('fill', 'none')
-      .attr('stroke', '#e05252')
-      .attr('stroke-width', 2)
-      .attr('d', d3.line()
-        .x(d => x(d.year))
-        .y(d => y(d.maxUV))
-      );
-      
-    // Add dots
-    svg.selectAll(".max-dots")
-      .data(yearlyAverages)
-      .join("circle")
-      .attr("cx", d => x(d.year))
-      .attr("cy", d => y(d.maxUV))
-      .attr("r", 4)
-      .attr("fill", "#e05252");
-      
-    svg.selectAll(".avg-dots")
-      .data(yearlyAverages)
-      .join("circle")
-      .attr("cx", d => x(d.year))
+    // Add dots to the lines for better readability
+    svg.selectAll(".dot-avg")
+      .data(sortedData)
+      .enter()
+      .append("circle")
+      .attr("class", "dot-avg")
+      .attr("cx", d => jitter(groupBy === "month" ? x as d3.ScalePoint<string> : x as d3.ScaleLinear<number, number>, groupBy === "month" ? d.month : d.year))
       .attr("cy", d => y(d.avgUV))
       .attr("r", 4)
-      .attr("fill", "#ffa500");
+      .attr("fill", themeColors.secondary);
 
-    // Add legend
-    const legend = svg.append('g')
-      .attr('transform', `translate(${width - 120}, 10)`);
+    svg.selectAll(".dot-max")
+      .data(sortedData)
+      .enter()
+      .append("circle")
+      .attr("class", "dot-max")
+      .attr("cx", d => jitter(groupBy === "month" ? x as d3.ScalePoint<string> : x as d3.ScaleLinear<number, number>, groupBy === "month" ? d.month : d.year))
+      .attr("cy", d => y(d.maxUV))
+      .attr("r", 4)
+      .attr("fill", themeColors.primary);
 
-    // Max UV line
-    legend.append('line')
-      .attr('x1', 0)
-      .attr('y1', 0)
-      .attr('x2', 20)
-      .attr('y2', 0)
-      .attr('stroke', '#e05252')
-      .attr('stroke-width', 2);
+    // Add chart title
+    svg.append("text")
+      .attr("x", width / 2)
+      .attr("y", -10)
+      .attr("text-anchor", "middle")
+      .style("font-size", "16px")
+      .style("font-weight", "bold")
+      .style("fill", themeColors.text)
+      .text(`UV Index ${selectedState !== "all" ? `for ${selectedState}` : "by State"}`);
 
-    legend.append('text')
-      .attr('x', 25)
-      .attr('y', 4)
-      .text('Maximum UV')
-      .style('font-size', '12px');
+    // Create better legend
+    const legend = svg.append("g")
+      .attr("transform", `translate(${width - 120}, 10)`);
 
-    // Avg UV line
-    legend.append('line')
-      .attr('x1', 0)
-      .attr('y1', 20)
-      .attr('x2', 20)
-      .attr('y2', 20)
-      .attr('stroke', '#ffa500')
-      .attr('stroke-width', 2);
+    // Legend background
+    legend.append("rect")
+      .attr("width", 110)
+      .attr("height", 60)
+      .attr("fill", "white")
+      .attr("stroke", themeColors.border)
+      .attr("rx", 5)
+      .attr("ry", 5);
 
-    legend.append('text')
-      .attr('x', 25)
-      .attr('y', 24)
-      .text('Average UV')
-      .style('font-size', '12px');
+    // Max UV legend item
+    legend.append("line")
+      .attr("x1", 10)
+      .attr("y1", 20)
+      .attr("x2", 30)
+      .attr("y2", 20)
+      .attr("stroke", themeColors.primary)
+      .attr("stroke-width", 2.5);
+      
+    legend.append("circle")
+      .attr("cx", 20)
+      .attr("cy", 20)
+      .attr("r", 4)
+      .attr("fill", themeColors.primary);
 
-  }, [uvData, loading]);
+    legend.append("text")
+      .attr("x", 40)
+      .attr("y", 24)
+      .style("font-size", "12px")
+      .style("fill", themeColors.text)
+      .text("Max UV");
+
+    // Avg UV legend item
+    legend.append("line")
+      .attr("x1", 10)
+      .attr("y1", 40)
+      .attr("x2", 30)
+      .attr("y2", 40)
+      .attr("stroke", themeColors.secondary)
+      .attr("stroke-width", 2.5);
+      
+    legend.append("circle")
+      .attr("cx", 20)
+      .attr("cy", 40)
+      .attr("r", 4)
+      .attr("fill", themeColors.secondary);
+
+    legend.append("text")
+      .attr("x", 40)
+      .attr("y", 44)
+      .style("font-size", "12px")
+      .style("fill", themeColors.text)
+      .text("Avg UV");
+
+  }, [uvData, groupBy, selectedState, themeColors]);
 
   return (
-    <div className="container p-8">
-      <h1 className="text-3xl font-bold text-center mb-8">
-        UV Index Trends by State
-      </h1>
-
-      {/* Two-column on desktop, one-column on mobile */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Yearly UV Trends in Australia</CardTitle>
-            <CardDescription>
-              Annual average and maximum UV index measurements across Australia from 2020-2023
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="h-[350px]">
-            {loading ? (
-              <div className="flex items-center justify-center h-full">
-                Loading data...
-              </div>
-            ) : (
-              <div ref={yearlyChartRef}></div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Monthly UV Index by State</CardTitle>
-            <CardDescription>
-              Compare UV patterns across different states throughout the year
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs value={selectedState} onValueChange={setSelectedState}>
-              <TabsList className="grid grid-cols-4 mb-4 sm:grid-cols-8">
-                <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="NSW">NSW</TabsTrigger>
-                <TabsTrigger value="VIC">VIC</TabsTrigger>
-                <TabsTrigger value="QLD">QLD</TabsTrigger>
-                <TabsTrigger value="SA">SA</TabsTrigger>
-                <TabsTrigger value="WA">WA</TabsTrigger>
-                <TabsTrigger value="TAS">TAS</TabsTrigger>
-                <TabsTrigger value="NT">NT</TabsTrigger>
-              </TabsList>
-              
-              <div className="h-[400px]">
-                {loading ? (
-                  <div className="flex items-center justify-center h-full">
-                    Loading data...
-                  </div>
-                ) : (
-                  <div ref={chartRef}></div>
-                )}
-              </div>
-            </Tabs>
-          </CardContent>
-        </Card>
-      </div>
+    <div className="container mx-auto p-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold text-slate-800">UV Index Data</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div className="space-y-2">
+              <Label htmlFor="groupBy" className="text-sm font-medium text-slate-700">Group By</Label>
+              <Select value={groupBy} onValueChange={(value) => setGroupBy(value as "year" | "month")}>
+                <SelectTrigger id="groupBy" className="w-full border-slate-300 bg-white focus:ring-orange-500 focus:border-orange-500">
+                  <SelectValue placeholder="Select grouping" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="year">Year</SelectItem>
+                  <SelectItem value="month">Month</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="state" className="text-sm font-medium text-slate-700">State</Label>
+              <Select value={selectedState} onValueChange={setSelectedState}>
+                <SelectTrigger id="state" className="w-full border-slate-300 bg-white focus:ring-orange-500 focus:border-orange-500">
+                  <SelectValue placeholder="Select state" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All States</SelectItem>
+                  <SelectItem value="SA">South Australia</SelectItem>
+                  <SelectItem value="NSW">New South Wales</SelectItem>
+                  <SelectItem value="VIC">Victoria</SelectItem>
+                  <SelectItem value="QLD">Queensland</SelectItem>
+                  <SelectItem value="WA">Western Australia</SelectItem>
+                  <SelectItem value="TAS">Tasmania</SelectItem>
+                  <SelectItem value="NT">Northern Territory</SelectItem>
+                  <SelectItem value="ACT">Australian Capital Territory</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          {loading ? (
+            <div className="flex justify-center items-center h-[400px]">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+            </div>
+          ) : (
+            <div className="rounded-lg border border-slate-200 p-4 bg-white">
+              <div ref={chartRef} className="w-full h-[400px]" />
+            </div>
+          )}
+          
+          <div className="mt-6 text-sm text-slate-600">
+            <p>
+              This chart displays {groupBy === "year" ? "yearly" : "monthly"} UV index data 
+              {selectedState !== "all" ? ` for ${selectedState}` : " across all Australian states"}.
+              The orange line shows maximum UV levels, while the blue line shows average UV levels.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
