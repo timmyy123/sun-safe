@@ -28,24 +28,24 @@ const Hero = () => {
               outdoor lifestyle.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 pt-4">
+            <div className="flex flex-col md:flex-row gap-4 pt-4">
               <Link href="/uvProtection/sunscreenCalculator">
                 <Button
                   size="lg"
-                  className="bg-white text-blue-600 hover:bg-yellow-300 hover:text-blue-800"
+                  className="bg-white text-blue-600 hover:bg-yellow-300 hover:text-blue-800 max-md:w-full "
                 >
                   Get Protected
                 </Button>
               </Link>
-              <Link href='/uvImpacts/cancer'>
-              <Button
-                size="lg"
-                variant="outline"
-                className="text-blue-600 border-white hover:text-blue-800 hover:bg-white/20"
+              <Link href="/uvImpacts/cancer">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="text-blue-600 border-white hover:text-blue-800 hover:bg-white/20  max-md:w-full"
                 >
-                Learn About Skin Cancer
-              </Button>
-                </Link>
+                  Learn About Skin Cancer
+                </Button>
+              </Link>
             </div>
           </div>
 

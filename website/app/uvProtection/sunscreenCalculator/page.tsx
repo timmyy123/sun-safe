@@ -1,237 +1,285 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import Image from "next/image";
+import { Info } from "lucide-react";
 
-const SunscreenCalculator = () => {
-  const [uvIndex, setUvIndex] = useState(null); // UV index from API
-  const [skinTone, setSkinTone] = useState("3"); // Default to medium skin tone
-  const [spf, setSpf] = useState("30"); // Default SPF
-  const thickness = 0.75; // Default thickness in mg/cm²
-  const [sunscreenAmount, setSunscreenAmount] = useState({ total: 0, breakdown: {} });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [location, setLocation] = useState({ lat: null, lon: null });
-  const OPENUV_API_KEY = process.env.NEXT_PUBLIC_OPENUV_API_KEY || "";
+// Skin types based on Fitzpatrick scale
+const skinTypes = [
+  {
+    id: "type1",
+    name: "Type I",
+    description: "Very fair skin, always burns, never tans",
+    color: "#fde4d0",
+    spfMultiplier: 1.5,
+    image: "/skin-type-1.png"
+  },
+  {
+    id: "type2",
+    name: "Type II",
+    description: "Fair skin, burns easily, tans minimally",
+    color: "#f8d5c0",
+    spfMultiplier: 1.3,
+    image: "/skin-type-2.png"
+  },
+  {
+    id: "type3",
+    name: "Type III",
+    description: "Medium skin, sometimes burns, gradually tans",
+    color: "#e8b89b",
+    spfMultiplier: 1.1,
+    image: "/skin-type-3.png"
+  },
+  {
+    id: "type4",
+    name: "Type IV",
+    description: "Olive skin, rarely burns, tans well",
+    color: "#c78e69",
+    spfMultiplier: 1.0,
+    image: "/skin-type-4.png"
+  },
+  {
+    id: "type5",
+    name: "Type V",
+    description: "Brown skin, very rarely burns, tans easily",
+    color: "#a76b45",
+    spfMultiplier: 0.9,
+    image: "/skin-type-5.png"
+  },
+  {
+    id: "type6",
+    name: "Type VI",
+    description: "Dark brown or black skin, never burns",
+    color: "#614335",
+    spfMultiplier: 0.8,
+    image: "/skin-type-6.png"
+  }
+];
 
-  // Skin tone options based on Fitzpatrick Scale
-  const skinToneOptions = [
-    { value: "1", label: "Type I: Very Fair (Always burns, never tans)" },
-    { value: "2", label: "Type II: Fair (Burns easily, tans minimally)" },
-    { value: "3", label: "Type III: Medium (Sometimes burns, tans uniformly)" },
-    { value: "4", label: "Type IV: Olive (Rarely burns, tans well)" },
-    { value: "5", label: "Type V: Brown (Very rarely burns, tans very easily)" },
-    { value: "6", label: "Type VI: Dark (Never burns, tans very easily)" },
-  ];
-
-  // SPF options
-  const spfOptions = [
-    { value: "15", label: "SPF 15" },
-    { value: "30", label: "SPF 30" },
-    { value: "45", label: "SPF 45" },
-    { value: "50", label: "SPF 50+" },
-  ];
-
-  // Skin sensitivity coefficients
-  const skinSensitivity = {
-    "1": 6,
-    "2": 5,
-    "3": 4,
-    "4": 3,
-    "5": 2,
-    "6": 1,
-  };
-
-  // Sunscreen amount per body part (in teaspoons)
-  const sunscreenPerBodyPart = {
-    faceNeckEars: 0.5, // 1/2 teaspoon
-    eachArm: 0.5, // 1/2 teaspoon per arm
-    eachLeg: 1, // 1 teaspoon per leg
-    torso: 2, // 2 teaspoons for combined torso
-  };
-
-  // Get user's current location
+export default function SunscreenCalculatorPage() {
+  const [selectedSkinType, setSelectedSkinType] = useState(skinTypes[2].id);
+  const [uvIndex, setUvIndex] = useState(6);
+  const [spoonsNeeded, setSpoonsNeeded] = useState(0);
+  const [spf, setSpf] = useState(30);
+  
+  // Calculate sunscreen amount whenever inputs change
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setLocation({
-            lat: position.coords.latitude,
-            lon: position.coords.longitude,
-          });
-        },
-        (error) => {
-          console.error("Error getting location:", error);
-          setError("Failed to get your location. Please enable location services.");
-          setLoading(false);
-        }
-      );
+    // Find the selected skin type object
+    const skinType = skinTypes.find(type => type.id === selectedSkinType);
+    
+    // Base calculation (teaspoons)
+    // Standard is about 1 teaspoon for moderate UV (6-7) for average skin
+    let baseAmount = 0;
+    
+    // UV index influences amount
+    if (uvIndex <= 2) {
+      baseAmount = 0.5; // Very low UV
+    } else if (uvIndex <= 5) {
+      baseAmount = 1; // Low to moderate UV
+    } else if (uvIndex <= 7) {
+      baseAmount = 1.5; // High UV
+    } else if (uvIndex <= 10) {
+      baseAmount = 2; // Very high UV
     } else {
-      setError("Geolocation is not supported by your browser.");
-      setLoading(false);
+      baseAmount = 2.5; // Extreme UV
     }
-  }, []);
-
-  // Fetch UV index from Open UV API
-  useEffect(() => {
-    if (location.lat && location.lon) {
-      const fetchUvIndex = async () => {
-        try {
-          const response = await axios.get("https://api.openuv.io/api/v1/uv", {
-            headers: {
-              "x-access-token": OPENUV_API_KEY,
-            },
-            params: {
-              lat: location.lat,
-              lng: location.lon,
-            },
-          });
-          setUvIndex(response.data.result.uv);
-          setLoading(false);
-        } catch (error) {
-          console.error("Error fetching UV index:", error);
-          setError("Failed to fetch UV index. Please try again later.");
-          setLoading(false);
-        }
-      };
-
-      fetchUvIndex();
+    
+    // Adjust for skin type if we have a valid skin type
+    if (skinType) {
+      baseAmount *= skinType.spfMultiplier;
     }
-  }, [location]);
-
-  // Calculate sunscreen amount based on UV index, skin tone, SPF, and thickness
-  useEffect(() => {
-    if (uvIndex !== null) {
-      const S = skinSensitivity[skinTone];
-      const P = parseInt(spf);
-      const D = thickness;
-
-      // Calculate risk factor
-      const R = (uvIndex * S) / (P * D);
-
-      // Adjust sunscreen amount based on risk factor
-      let totalAmount = 0;
-      const breakdown = {};
-
-      for (const [part, amount] of Object.entries(sunscreenPerBodyPart)) {
-        const adjustedAmount = amount * R;
-        breakdown[part] = adjustedAmount.toFixed(2);
-        totalAmount += adjustedAmount;
-      }
-
-      setSunscreenAmount({
-        total: totalAmount.toFixed(2),
-        breakdown,
-      });
-    }
-  }, [uvIndex, skinTone, spf]);
+    
+    // SPF adjustment (higher SPF products are often thicker)
+    const spfFactor = spf <= 30 ? 1 : spf <= 50 ? 1.1 : 1.2;
+    baseAmount *= spfFactor;
+    
+    // Round to 1 decimal place
+    setSpoonsNeeded(Math.round(baseAmount * 10) / 10);
+  }, [selectedSkinType, uvIndex, spf]);
+  
+  // Get currently selected skin type
+  const currentSkinType = skinTypes.find(type => type.id === selectedSkinType) || skinTypes[0];
+  
+  // Get UV index severity
+  const getUvSeverity = (index) => {
+    if (index <= 2) return { label: "Low", color: "text-green-500" };
+    if (index <= 5) return { label: "Moderate", color: "text-yellow-500" };
+    if (index <= 7) return { label: "High", color: "text-orange-500" };
+    if (index <= 10) return { label: "Very High", color: "text-red-500" };
+    return { label: "Extreme", color: "text-purple-500" };
+  };
+  
+  const uvSeverity = getUvSeverity(uvIndex);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-blue-100 py-10">
-      <div className="max-w-4xl mx-auto px-4">
-        <h1 className="text-4xl font-bold text-center text-blue-900 mb-8">
-          Sunscreen Calculator
-        </h1>
-        <Card className="bg-white shadow-lg rounded-lg">
-          <CardHeader>
-            <h2 className="text-2xl font-semibold text-blue-800">
-              Personalized Sun Safety Plan
-            </h2>
-            <p className="text-gray-600">
-              Calculate the amount of sunscreen you need based on the UV index, skin tone, and SPF.
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div>
-              <label className="block text-xl font-medium text-gray-700 mb-2">
-                Current UV Index:{" "}
-                {loading ? (
-                  <span className="text-gray-500">Loading...</span>
-                ) : error ? (
-                  <span className="text-red-600">Error</span>
-                ) : (
-                  <span className="font-bold text-blue-600">{uvIndex}</span>
-                )}
-              </label>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Skin Tone (Fitzpatrick Scale)
-              </label>
-              <Select value={skinTone} onValueChange={setSkinTone}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select your skin tone" />
-                </SelectTrigger>
-                <SelectContent>
-                  {skinToneOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                SPF Value:
-              </label>
-              <Select value={spf} onValueChange={setSpf}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select SPF" />
-                </SelectTrigger>
-                <SelectContent>
-                  {spfOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Sunscreen Recommendations
-              </label>
-              {loading ? (
-                <p className="text-gray-700">Loading UV index...</p>
-              ) : error ? (
-                <p className="text-red-600">{error}</p>
-              ) : uvIndex < 3 ? (
-                <p className="text-gray-700">
-                  UV index is low ({uvIndex}). Most people do not need sunscreen, but if you have Type I or II skin, consider using SPF 30+ for prolonged outdoor activities.
-                </p>
-              ) : (
-                <>
-                  <div className="text-3xl font-bold text-blue-800">
-                    {sunscreenAmount.total} teaspoons (1 tsp ≈ 5ml)
-                  </div>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Apply this amount of sunscreen to exposed areas of your body:
-                  </p>
-                  <div className="grid grid-cols-2 gap-4 mt-4">
-                    <div>
-                      <ul className="list-disc list-inside text-sm text-gray-700">
-                        <li>Face, Neck, and Ears (exposed): {sunscreenAmount.breakdown.faceNeckEars} tsp</li>
-                        <li>Each Arm (exposed): {sunscreenAmount.breakdown.eachArm} tsp</li>
-                      </ul>
-                    </div>
-                    <div>
-                      <ul className="list-disc list-inside text-sm text-gray-700">
-                        <li>Each Leg (exposed): {sunscreenAmount.breakdown.eachLeg} tsp</li>
-                        <li>Torso (exposed): {sunscreenAmount.breakdown.torso} tsp</li>
-                      </ul>
+    <div className="container mx-auto py-8 px-4">
+      <h1 className="text-3xl font-bold mb-2 text-amber-300 text-center">Personalized Sunscreen Calculator</h1>
+      <p className="text-center text-cyan-500 mb-8">Calculate how much sunscreen you need based on your skin type and UV conditions</p>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Input section */}
+        <div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Your Information</CardTitle>
+              <CardDescription>Tell us about yourself and the conditions</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-8">
+              {/* Skin Type Selection */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base font-medium">Your Skin Type</Label>
+                  <div className="relative group">
+                    <Info size={18} className="text-slate-400 cursor-help" />
+                    <div className="absolute right-0 w-64 p-2 bg-white border rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-50 text-xs">
+                      The Fitzpatrick scale classifies skin types based on how they react to sun exposure. Knowing your type helps determine appropriate sun protection.
                     </div>
                   </div>
-                </>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-4">
+                  {skinTypes.map((type) => (
+                    <div
+                      key={type.id}
+                      onClick={() => setSelectedSkinType(type.id)}
+                      className={`relative cursor-pointer rounded-lg border-2 p-2 transition-all ${
+                        selectedSkinType === type.id 
+                          ? "border-amber-500 bg-amber-50" 
+                          : "border-slate-200 hover:border-slate-300"
+                      }`}
+                    >
+                      <div 
+                        className="w-full h-16 rounded-md mb-2" 
+                        style={{ backgroundColor: type.color }}
+                      ></div>
+                      <p className="text-sm font-medium text-center">{type.name}</p>
+                      
+                      {selectedSkinType === type.id && (
+                        <div className="absolute -top-2 -right-2 bg-amber-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">✓</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Description of selected skin type */}
+                <div className="text-sm text-slate-600 bg-slate-50 p-3 rounded-md">
+                  <strong>{currentSkinType.name}:</strong> {currentSkinType.description}
+                </div>
+              </div>
+              
+              {/* UV Index Slider */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base font-medium">Current UV Index</Label>
+                  <span className={`font-medium ${uvSeverity.color}`}>
+                    {uvIndex} ({uvSeverity.label})
+                  </span>
+                </div>
+                
+                <Slider 
+                  min={1} 
+                  max={12} 
+                  step={1} 
+                  value={[uvIndex]} 
+                  onValueChange={(values) => setUvIndex(values[0])}
+                  className="py-4"
+                />
+                
+                <div className="relative h-3 w-full">
+                  <div className="absolute inset-0 flex">
+                    <div className="h-full w-1/5 bg-green-500 rounded-l-full"></div>
+                    <div className="h-full w-1/5 bg-yellow-500"></div>
+                    <div className="h-full w-1/5 bg-orange-500"></div>
+                    <div className="h-full w-1/5 bg-red-500"></div>
+                    <div className="h-full w-1/5 bg-purple-500 rounded-r-full"></div>
+                  </div>
+                </div>
+                <div className="flex justify-between text-xs text-slate-500">
+                  <span>1-2 Low</span>
+                  <span>3-5 Moderate</span>
+                  <span>6-7 High</span>
+                  <span>8-10 Very High</span>
+                  <span>11+ Extreme</span>
+                </div>
+              </div>
+              
+              {/* SPF Selection */}
+              <div className="space-y-4">
+                <Label className="text-base font-medium">Sunscreen SPF</Label>
+                <RadioGroup 
+                  value={spf.toString()} 
+                  onValueChange={(value) => setSpf(parseInt(value, 10))}
+                  className="flex flex-wrap gap-4"
+                >
+                  {[15, 30, 50, 70, 100].map((value) => (
+                    <div key={value} className="flex items-center space-x-2">
+                      <RadioGroupItem value={value.toString()} id={`spf-${value}`} />
+                      <Label htmlFor={`spf-${value}`} className="cursor-pointer">SPF {value}</Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        
+        {/* Results section */}
+        <div>
+          <Card className="h-full flex flex-col">
+            <CardHeader>
+              <CardTitle>Your Recommendation</CardTitle>
+              <CardDescription>Personalized sunscreen usage guidance</CardDescription>
+            </CardHeader>
+            <CardContent className="flex-grow flex flex-col justify-center space-y-6">
+              <div className="flex justify-center">
+                <div className="relative w-48 h-48">
+                  <div className="absolute inset-0 bg-amber-100 rounded-full flex items-center justify-center">
+                    <div className="text-center">
+                      <span className="block text-5xl font-bold text-amber-600">{spoonsNeeded}</span>
+                      <span className="text-amber-800">teaspoons</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="text-center space-y-1">
+                <h3 className="text-lg font-medium">For your face & neck</h3>
+                <p className="text-slate-600">Based on your skin type and current UV index</p>
+              </div>
+              
+              <div className="bg-slate-50 p-4 rounded-lg space-y-2">
+                <h4 className="font-medium">Remember:</h4>
+                <ul className="list-disc list-inside text-sm text-slate-700 space-y-1">
+                  <li>Apply sunscreen 20 minutes before sun exposure</li>
+                  <li>Reapply every 2 hours or after swimming/sweating</li>
+                  <li>Don't forget commonly missed areas like ears and back of neck</li>
+                  <li>For full body coverage, multiply by 6-7 times this amount</li>
+                </ul>
+              </div>
+              
+              <div className="bg-amber-50 p-4 rounded-lg border border-amber-100">
+                <div className="flex items-start">
+                  <div className="mr-3 text-amber-600">
+                    <Info size={20} />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-amber-800">Your risk profile</h4>
+                    <p className="text-sm text-amber-700">
+                      With {currentSkinType.name} skin in {uvSeverity.label.toLowerCase()} UV conditions, 
+                      you have {currentSkinType.id.includes("type1") || currentSkinType.id.includes("type2") ? "higher" : "moderate"} 
+                      risk of sun damage. In addition to sunscreen, consider seeking shade and wearing protective clothing.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
-};
-
-export default SunscreenCalculator;
+}
