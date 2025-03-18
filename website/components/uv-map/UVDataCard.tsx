@@ -27,6 +27,30 @@ const UVDataCard = ({
   isLoadingUV,
   uvError,
 }: UVDataCardProps) => {
+  // Function to get the gradient colors based on UV index
+  const getUVGradient = (uvIndex: number) => {
+    // Low (0-2): Green to Teal
+    if (uvIndex <= 2) {
+      return "from-green-400 to-teal-500";
+    }
+    // Moderate (3-5): Teal to Blue
+    else if (uvIndex <= 5) {
+      return "from-teal-400 to-blue-500";
+    }
+    // High (6-7): Yellow to Orange
+    else if (uvIndex <= 7) {
+      return "from-yellow-400 to-orange-500";
+    }
+    // Very High (8-10): Orange to Red
+    else if (uvIndex <= 10) {
+      return "from-orange-400 to-red-500";
+    }
+    // Extreme (11+): Red to Purple
+    else {
+      return "from-red-500 to-purple-600";
+    }
+  };
+
   return (
     <Card className="h-full flex flex-col">
       <CardHeader>
@@ -80,15 +104,15 @@ const UVDataCard = ({
             </TabsList>
 
             <TabsContent value="current" className="space-y-4 pt-4">
-              <div className="bg-gradient-to-r from-green-400 to-blue-500 text-white rounded-lg p-6 text-center">
+              <div 
+                className={`bg-gradient-to-r ${getUVGradient(uvData.result.uv)} text-white rounded-lg p-6 text-center transition-colors duration-300`}
+              >
                 <p className="text-5xl font-bold">
                   {uvData.result.uv.toFixed(1)}
                 </p>
                 <p className="text-lg mt-2">Current UV Index</p>
                 <Badge
-                  className={`mt-2 bg-${
-                    getUVRiskLevel(uvData.result.uv).color
-                  }-500`}
+                  className={`mt-2 bg-white/20 text-white border-0`}
                 >
                   {getUVRiskLevel(uvData.result.uv).level} Risk
                 </Badge>
