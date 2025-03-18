@@ -6,10 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // UV data fetching
-const fetchUVData = async () => {
-  const response = await fetch('/api/uv-data');
+const fetchUVData = async (state = 'all') => {
+  const response = await fetch(`/api/uv-data?state=${state}`);
   if (!response.ok) throw new Error('Failed to fetch UV data');
-  return response.json();
+  const result = await response.json();
+  return result.data;
 };
 
 export default function UVByState() {
@@ -24,7 +25,7 @@ export default function UVByState() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const rawData = await fetchUVData();
+        const rawData = await fetchUVData(selectedState);
 
         // Group by state & year & month, calculate avg and max
         const processed = {};
@@ -67,7 +68,7 @@ export default function UVByState() {
     };
     
     fetchData();
-  }, []);
+  }, [selectedState]);
 
   // Render line chart by state
   useEffect(() => {
@@ -440,8 +441,9 @@ export default function UVByState() {
       <h1 className="text-3xl font-bold text-center mb-8">
         UV Index Trends by State
       </h1>
-      
-      <div className="space-y-8">
+
+      {/* Two-column on desktop, one-column on mobile */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
             <CardTitle>Yearly UV Trends in Australia</CardTitle>
@@ -490,39 +492,6 @@ export default function UVByState() {
                 )}
               </div>
             </Tabs>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-yellow-50 border-yellow-200">
-          <CardHeader>
-            <CardTitle>Protecting Yourself from UV Radiation</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white p-4 rounded-lg shadow">
-                <h3 className="text-lg font-semibold mb-2">UV Peaks in Summer</h3>
-                <p>
-                  UV levels are highest during summer months (December-February), 
-                  reaching extreme levels that require maximum protection.
-                </p>
-              </div>
-              
-              <div className="bg-white p-4 rounded-lg shadow">
-                <h3 className="text-lg font-semibold mb-2">Regional Differences</h3>
-                <p>
-                  Northern regions (QLD, NT) experience higher UV levels year-round,
-                  while southern states have more seasonal variation.
-                </p>
-              </div>
-              
-              <div className="bg-white p-4 rounded-lg shadow">
-                <h3 className="text-lg font-semibold mb-2">Year-Round Protection</h3>
-                <p>
-                  Even during winter months in southern Australia, UV levels can 
-                  still reach moderate levels that require sun protection.
-                </p>
-              </div>
-            </div>
           </CardContent>
         </Card>
       </div>

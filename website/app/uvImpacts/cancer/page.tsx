@@ -6,16 +6,31 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Cancer data fetching
-const fetchCancerData = async () => {
-  const response = await fetch('/api/cancer-data');
+const fetchCancerData = async (filters, groupBy = 'none') => {
+  const params = new URLSearchParams();
+  
+  if (filters.year) params.append('year', filters.year);
+  if (filters.cancerType) params.append('cancer_type', filters.cancerType);
+  if (filters.sex) params.append('sex', filters.sex);
+  if (filters.ageGroup) params.append('age_group', filters.ageGroup);
+  if (groupBy !== 'none') params.append('groupBy', groupBy);
+  
+  const response = await fetch(`/api/cancer-data?${params.toString()}`);
   if (!response.ok) throw new Error('Failed to fetch cancer data');
-  return response.json();
+  const result = await response.json();
+  return result.data;
 };
 
 export default function CancerImpacts() {
   const [cancerData, setCancerData] = useState([]);
   const [activeTab, setActiveTab] = useState('yearly');
   const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({
+    year: null,
+    cancerType: null,
+    sex: null,
+    ageGroup: null
+  });
   
   const yearlyChartRef = useRef(null);
   const ageSexChartRef = useRef(null);
@@ -26,7 +41,14 @@ export default function CancerImpacts() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const data = await fetchCancerData();
+        let groupBy = 'none';
+        
+        // Determine appropriate groupBy based on tab
+        if (activeTab === 'yearly') groupBy = 'year';
+        else if (activeTab === 'age') groupBy = 'age_group'; 
+        else if (activeTab === 'type') groupBy = 'cancer_type';
+        
+        const data = await fetchCancerData(filters, groupBy);
         setCancerData(data);
       } catch (error) {
         console.error("Error fetching cancer data:", error);
@@ -36,7 +58,7 @@ export default function CancerImpacts() {
     };
     
     fetchData();
-  }, []);
+  }, [activeTab, filters]);
   
   // Render yearly cancer trends chart
   useEffect(() => {
