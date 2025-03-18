@@ -29,11 +29,10 @@ export default function CancerPage() {
   const [selectedCancerType, setSelectedCancerType] = useState<string>("");
   const [selectedSex, setSelectedSex] = useState<string>("");
   const [selectedAgeGroup, setSelectedAgeGroup] = useState<string>("");
-  const [activeView, setActiveView] = useState<"yearly" | "byAge">("yearly");
+  const [activeView] = useState<"yearly">("yearly");
   
   // Chart references
   const yearlyChartRef = useRef<HTMLDivElement>(null);
-  const ageGroupChartRef = useRef<HTMLDivElement>(null);
 
   // Fetch field values on mount
   useEffect(() => {
@@ -347,9 +346,6 @@ export default function CancerPage() {
     
   }, [filteredData, activeView, selectedAgeGroup, loading, selectedCancerType]);
 
-  // Rest of the component remains the same...
-  // [Keep the age distribution chart and UI components as they were]
-
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6">Cancer Statistics</h1>
@@ -430,18 +426,10 @@ export default function CancerPage() {
           {/* Tabs */}
           <div className="flex border-b mb-6">
             <button 
-              className={`py-2 px-4 ${activeView === "yearly" ? "border-b-2 border-blue-500 font-medium" : "text-gray-500"}`}
-              onClick={() => setActiveView("yearly")}
+              className="py-2 px-4 border-b-2 border-blue-500 font-medium"
               disabled={loading}
             >
               Yearly Trends
-            </button>
-            <button 
-              className={`py-2 px-4 ${activeView === "byAge" ? "border-b-2 border-blue-500 font-medium" : "text-gray-500"}`}
-              onClick={() => setActiveView("byAge")}
-              disabled={loading}
-            >
-              By Age Group
             </button>
           </div>
           
@@ -458,13 +446,6 @@ export default function CancerPage() {
               {activeView === "yearly" && (
                 <div 
                   ref={yearlyChartRef} 
-                  className="border rounded-lg p-4 shadow-sm bg-white h-[400px]"
-                />
-              )}
-              
-              {activeView === "byAge" && (
-                <div 
-                  ref={ageGroupChartRef} 
                   className="border rounded-lg p-4 shadow-sm bg-white h-[400px]"
                 />
               )}

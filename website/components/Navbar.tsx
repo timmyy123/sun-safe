@@ -62,14 +62,17 @@ const Navbar = () => {
                 <NavigationMenuList>
                   {navItems.map((item) => (
                     <NavigationMenuItem key={item.label} className="relative">
-                      <NavigationMenuTrigger className="text-sm bg-amber-400/80 text-white" style={{ cursor: 'pointer' }}>
+                      <NavigationMenuTrigger
+                        className="text-sm bg-amber-400/80 text-white"
+                        style={{ cursor: "pointer" }}
+                      >
                         {item.label}
                       </NavigationMenuTrigger>
 
                       {item.tabs && (
                         <NavigationMenuContent
                           className="absolute left-0 top-full bg-white rounded-md border shadow-md p-2 min-w-[150px] mt-1 z-100"
-                          style={{ cursor: 'pointer' }}
+                          style={{ cursor: "pointer" }}
                         >
                           <ul className="grid gap-2">
                             {item.tabs.map((tab) => (
@@ -90,12 +93,14 @@ const Navbar = () => {
                 </NavigationMenuList>
               </NavigationMenu>
 
+              <Link href='/uvProtection/sunscreenReminder'>
               <Button
                 size="sm"
                 className="ml-4 text-sm bg-amber-400/80 text-white hover:bg-sky-300 hover:text-yellow-200"
-              >
+                >
                 Get Protected
               </Button>
+                </Link>
             </div>
           </div>
 
@@ -157,9 +162,11 @@ const Navbar = () => {
                       ))}
 
                       <div className="pt-4">
-                        <Button className="w-full bg-white text-blue-600 hover:bg-yellow-300 hover:text-blue-800">
-                          Get Protected
-                        </Button>
+                        <Link href="/uvProtection/sunscreenReminder">
+                          <Button className="w-full bg-white text-blue-600 hover:bg-yellow-300 hover:text-blue-800">
+                            Get Protected
+                          </Button>
+                        </Link>
                       </div>
                     </nav>
                   </div>
