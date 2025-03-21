@@ -79,16 +79,14 @@ const Navbar = () => {
                     {navItems.map((item) => (
                       <NavigationMenuItem key={item.label} className="relative">
                         <NavigationMenuTrigger
-                          className="text-sm bg-yellow-400 text-white"
-                          style={{ cursor: "pointer" }}
+                          className="text-sm bg-yellow-400 text-white cursor-pointer"
                         >
                           {item.label}
                         </NavigationMenuTrigger>
 
                         {item.tabs && (
                           <NavigationMenuContent
-                            className="absolute left-0 top-full bg-white rounded-md border shadow-md p-2 min-w-[150px] mt-1 z-100"
-                            style={{ cursor: "pointer" }}
+                            className="absolute left-0 top-full bg-white rounded-md border shadow-md p-2 min-w-[150px] mt-1 z-100 cursor-pointer"
                           >
                             <ul className="grid gap-2">
                               {item.tabs.map((tab) => (
@@ -112,7 +110,7 @@ const Navbar = () => {
                 <Link href='/uvProtection/sunscreenReminder'>
                 <Button
                   size="sm"
-                  className="ml-4 text-sm bg-yellow-400 text-white hover:bg-sky-300 hover:text-yellow-200"
+                  className="ml-4 text-sm bg-yellow-400 text-white hover:bg-sky-300 hover:text-yellow-200 cursor-pointer"
                   >
                   Get Protected
                 </Button>

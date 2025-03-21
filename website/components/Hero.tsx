@@ -32,7 +32,7 @@ const Hero = () => {
               <Link href="/uvProtection/sunscreenCalculator">
                 <Button
                   size="lg"
-                  className="bg-white text-blue-600 hover:bg-yellow-300 hover:text-blue-800 max-md:w-full "
+                  className="bg-white text-blue-600 hover:bg-yellow-300 hover:text-blue-800 max-md:w-full cursor-pointer"
                 >
                   Get Protected
                 </Button>
@@ -41,7 +41,7 @@ const Hero = () => {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="text-blue-600 border-white hover:text-blue-800 hover:bg-white/20  max-md:w-full"
+                  className="text-blue-600 border-white hover:text-blue-800 hover:bg-white/20  max-md:w-full cursor-pointer"
                 >
                   Learn About Skin Cancer
                 </Button>

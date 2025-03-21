@@ -114,7 +114,7 @@ const SearchLocation = ({ handleSearch, searchError }: SearchLocationProps) => {
           />
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
         </div>
-        <Button type="submit" className="bg-sky-500 hover:bg-sky-600">Search</Button>
+        <Button type="submit" className="bg-sky-500 hover:bg-sky-600 cursor-pointer">Search</Button>
       </form>
 
       {searchError && (

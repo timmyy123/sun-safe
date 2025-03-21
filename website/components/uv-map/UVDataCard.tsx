@@ -99,8 +99,8 @@ const UVDataCard = ({
         {selectedPlace && uvData && (
           <Tabs defaultValue="current">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="current">Current UV</TabsTrigger>
-              <TabsTrigger value="forecast">Daily Forecast</TabsTrigger>
+              <TabsTrigger value="current" style={{ cursor: "pointer" }}>Current UV</TabsTrigger>
+              <TabsTrigger value="forecast" style={{ cursor: "pointer" }}>Daily Forecast</TabsTrigger>
             </TabsList>
 
             <TabsContent value="current" className="space-y-4 pt-4">
