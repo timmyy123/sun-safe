@@ -222,13 +222,13 @@ export default function EnhancedSunscreenCalculator() {
       
       {/* Removed the top tabs section */}
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Input section */}
         <div>
           <Card>
-            <CardHeader className="flex flex-col lg:flex-row items-center justify-between">
+            <CardHeader className="flex flex-col md:flex-row items-center justify-between">
             
-              <div className="max-lg:text-center">
+              <div className="max-md:text-center">
                 <CardTitle>Your Information</CardTitle>
                 <CardDescription>Tell us about yourself and the conditions</CardDescription>
               </div>
