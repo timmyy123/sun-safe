@@ -34,7 +34,7 @@ export default function AIAssistantButton() {
         <Button
           onClick={toggleChat}
           className={cn(
-            "h-14 w-14 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 shadow-lg hover:from-yellow-500 hover:to-orange-600",
+            "h-14 w-14 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 shadow-lg hover:from-yellow-500 hover:to-orange-600 cursor-pointer",
             isOpen && "bg-red-500 hover:bg-red-600"
           )}
         >
