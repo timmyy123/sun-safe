@@ -222,7 +222,7 @@ export default function EnhancedSunscreenCalculator() {
       
       {/* Removed the top tabs section */}
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Input section */}
         <div>
           <Card>
