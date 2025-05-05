@@ -29,6 +29,7 @@
     "@types/jsdom": "^21.1.7",
     "@types/mapbox-gl": "^3.4.1",
     "@types/node-fetch": "^2.6.12",
+    "@vercel/analytics": "^1.5.0",
     "ai": "^4.1.54",
     "appwrite": "^17.0.1",
     "axios": "^1.8.2",
